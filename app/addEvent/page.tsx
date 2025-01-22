@@ -204,6 +204,27 @@ const AddEvent: React.FC = () => {
     },
   });
 
+  const generateSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except hyphen
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-'); // Replace multiple hyphens with single hyphen
+  };
+
+  // Watch the eventTitle field and update eventSlug
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'eventTitle') {
+        const slug = generateSlug(value.eventTitle || '');
+        form.setValue('eventSlug', slug);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form]);
+
   // 2. Define a submit handler.
   async function onSubmit(formData: z.infer<typeof EventSchema>) {
     // Do something with the form values.
