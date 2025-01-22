@@ -68,8 +68,23 @@ const timezones = [
   { value: '-03:00', name: '(GMT -3:00) Brazil, Buenos Aires, Georgetown' },
 ];
 // Then use this array to populate your select element
-const hours = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'] as const;
-const mins = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0')) as [string, ...string[]];
+const hours = [
+  '1',
+  '2',
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8',
+  '9',
+  '10',
+  '11',
+  '12',
+] as const;
+const mins = Array.from({ length: 60 }, (_, i) =>
+  i.toString().padStart(2, '0')
+) as [string, ...string[]];
 
 type FormData = {
   eventTitle: string;
@@ -158,17 +173,19 @@ const AddEvent: React.FC = () => {
   const now = new Date();
   const currentHour = now.getHours();
   const currentMinute = now.getMinutes();
-  
+
   let hourIn12 = currentHour % 12;
   hourIn12 = hourIn12 === 0 ? 12 : hourIn12;
   const ampm = currentHour >= 12 ? 'PM' : 'AM';
-  
+
   const minuteString = currentMinute.toString().padStart(2, '0');
 
   const getTimezoneOffset = () => {
     const offsetInMinutes = new Date().getTimezoneOffset();
     const offsetHours = Math.abs(offsetInMinutes / 60);
-    const formattedOffset = `${offsetInMinutes <= 0 ? '+' : '-'}${Math.floor(offsetHours)
+    const formattedOffset = `${offsetInMinutes <= 0 ? '+' : '-'}${Math.floor(
+      offsetHours
+    )
       .toString()
       .padStart(2, '0')}:00`;
     return formattedOffset;
@@ -230,9 +247,16 @@ const AddEvent: React.FC = () => {
 
     if (error) {
       setError(error);
-      // console.error('Error saving to database:', error);
+      // console.error('Error saving to database:', error.details);
       if (error.code === '23505') {
-        setErrorMessage('Slug already taken, please enter a new slug.');
+        if (error.details.includes('event_title'))
+          setErrorMessage(
+            'Event title already taken, please enter a new event title.'
+          );
+        if (error.details.includes('event_slug'))
+          setErrorMessage(
+            'Event slug already taken, please enter a new event slug.'
+          );
       } else {
         setErrorMessage(
           'There was an error saving your event, please reload the page and try again!'
@@ -279,18 +303,17 @@ const AddEvent: React.FC = () => {
       </div>
 
       <div className='w-full max-w-md m-auto mb-10'>
-        {error && <p className='text-red-500'>{errorMessage}</p>}
+        {error && <p className='text-red-500 mb-6'>{errorMessage}</p>}
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className='space-y-8'
-          >
+          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
             <FormField
               control={form.control}
               name='eventTitle'
               render={({ field }) => (
                 <FormItem className='flex flex-col'>
-                  <FormLabel>Event Title <span className="text-red-500">*</span></FormLabel>
+                  <FormLabel>
+                    Event Title <span className='text-red-500'>*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input
                       type='text'
@@ -307,7 +330,9 @@ const AddEvent: React.FC = () => {
               name='eventSlug'
               render={({ field }) => (
                 <FormItem className='flex flex-col'>
-                  <FormLabel>Event Slug <span className="text-red-500">*</span></FormLabel>
+                  <FormLabel>
+                    Event Slug <span className='text-red-500'>*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input
                       type='text'
@@ -320,8 +345,10 @@ const AddEvent: React.FC = () => {
                       }}
                     />
                   </FormControl>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    {form.getValues('eventSlug') ? `${baseUrl}/events/${form.getValues('eventSlug')}` : 'Enter a slug to see your event URL'}
+                  <p className='text-[10px] text-muted-foreground mt-1'>
+                    {form.getValues('eventSlug')
+                      ? `${baseUrl}/events/${form.getValues('eventSlug')}`
+                      : 'Enter a slug to see your event URL'}
                   </p>
                   <FormMessage />
                 </FormItem>
@@ -332,7 +359,9 @@ const AddEvent: React.FC = () => {
               name='eventDate'
               render={({ field }) => (
                 <FormItem className='flex flex-col'>
-                  <FormLabel>Event Date <span className="text-red-500">*</span></FormLabel>
+                  <FormLabel>
+                    Event Date <span className='text-red-500'>*</span>
+                  </FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -366,7 +395,9 @@ const AddEvent: React.FC = () => {
               )}
             />
             <FormItem>
-              <FormLabel>Event Time <span className="text-red-500">*</span></FormLabel>
+              <FormLabel>
+                Event Time <span className='text-red-500'>*</span>
+              </FormLabel>
               <div className='flex flex-col md:flex-row gap-2 border p-2 rounded-md'>
                 <FormField
                   control={form.control}
@@ -455,7 +486,9 @@ const AddEvent: React.FC = () => {
               name='eventTimezone'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Timezone <span className="text-red-500">*</span></FormLabel>
+                  <FormLabel>
+                    Timezone <span className='text-red-500'>*</span>
+                  </FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -478,7 +511,9 @@ const AddEvent: React.FC = () => {
               )}
             />
 
-            <Button type='submit' className='w-full'>Create Event</Button>
+            <Button type='submit' className='w-full'>
+              Create Event
+            </Button>
           </form>
         </Form>
       </div>
