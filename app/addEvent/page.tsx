@@ -218,6 +218,11 @@ const AddEvent: React.FC = () => {
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === 'eventTitle') {
+        // Clear errors when user starts typing
+        setError(null);
+        setErrorMessage(null);
+        setTitleExists(false);
+
         const slug = generateSlug(value.eventTitle || '');
         form.setValue('eventSlug', slug);
 
@@ -255,6 +260,15 @@ const AddEvent: React.FC = () => {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
 
+    // Prevent submission if title already exists
+    if (titleExists) {
+      setError(new Error('Duplicate title'));
+      setErrorMessage(
+        'Event title already taken, please enter a new event title.'
+      );
+      return;
+    }
+
     setIsLoading(true);
 
     let hr;
@@ -278,6 +292,7 @@ const AddEvent: React.FC = () => {
 
     setError(null);
     setErrorMessage(null);
+    setTitleExists(false);
 
     const { data, error } = await supabase
       .from('events')
