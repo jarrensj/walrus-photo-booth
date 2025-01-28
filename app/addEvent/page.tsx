@@ -143,6 +143,7 @@ const AddEvent: React.FC = () => {
   const [currentAdminId, setCurrentAdminId] = useState<number | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [titleExists, setTitleExists] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchCurrentAdmin = async () => {
@@ -219,6 +220,30 @@ const AddEvent: React.FC = () => {
       if (name === 'eventTitle') {
         const slug = generateSlug(value.eventTitle || '');
         form.setValue('eventSlug', slug);
+
+        // Check for existing event title
+        const checkEventTitle = async () => {
+          if (value.eventTitle) {
+            const { data: events, error } = await supabase
+              .from('events')
+              .select('event_title')
+              .eq('event_title', value.eventTitle.toLowerCase().trim())
+              .limit(1);
+
+            if (error) {
+              console.error('Error checking event title:', error);
+              return;
+            }
+
+            setTitleExists(events.length > 0);
+          } else {
+            setTitleExists(false);
+          }
+        };
+
+        // Debounce the database check to avoid too many requests
+        const timeoutId = setTimeout(checkEventTitle, 500);
+        return () => clearTimeout(timeoutId);
       }
     });
 
@@ -230,7 +255,7 @@ const AddEvent: React.FC = () => {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
 
-    // setIsLoading(true);
+    setIsLoading(true);
 
     let hr;
 
@@ -265,6 +290,8 @@ const AddEvent: React.FC = () => {
         },
       ])
       .select();
+
+    setIsLoading(false);
 
     if (error) {
       setError(error);
@@ -342,6 +369,11 @@ const AddEvent: React.FC = () => {
                       {...field}
                     />
                   </FormControl>
+                  {titleExists && (
+                    <p className='text-sm text-red-500 mt-1'>
+                      An event with this title already exists
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
