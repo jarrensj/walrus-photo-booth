@@ -144,6 +144,7 @@ const AddEvent: React.FC = () => {
   const [error, setError] = useState<Error | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [titleExists, setTitleExists] = useState<boolean>(false);
+  const [isCheckingTitle, setIsCheckingTitle] = useState(false);
 
   useEffect(() => {
     const fetchCurrentAdmin = async () => {
@@ -241,8 +242,10 @@ const AddEvent: React.FC = () => {
             }
 
             setTitleExists(events.length > 0);
+            setIsCheckingTitle(false);
           } else {
             setTitleExists(false);
+            setIsCheckingTitle(false);
           }
         };
 
@@ -579,8 +582,16 @@ const AddEvent: React.FC = () => {
               )}
             />
 
-            <Button type='submit' className='w-full'>
-              Create Event
+            <Button
+              type='submit'
+              className='w-full'
+              disabled={isCheckingTitle || titleExists}
+            >
+              {isCheckingTitle
+                ? 'Checking title...'
+                : titleExists
+                ? 'Title already exists'
+                : 'Create Event'}
             </Button>
           </form>
         </Form>
