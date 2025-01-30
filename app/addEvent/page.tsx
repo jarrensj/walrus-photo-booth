@@ -143,8 +143,10 @@ const AddEvent: React.FC = () => {
   const [currentAdminId, setCurrentAdminId] = useState<number | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [titleExists, setTitleExists] = useState<boolean>(false);
+
   const [isCheckingTitle, setIsCheckingTitle] = useState(false);
+  const [titleExists, setTitleExists] = useState(false);
+  const [submitButtonEnabled, setSubmitButtonEnabled] = useState(false);
 
   useEffect(() => {
     const fetchCurrentAdmin = async () => {
@@ -230,6 +232,7 @@ const AddEvent: React.FC = () => {
         // Check for existing event title
         const checkEventTitle = async () => {
           if (value.eventTitle) {
+            setIsCheckingTitle(true);
             const { data: events, error } = await supabase
               .from('events')
               .select('event_title')
@@ -241,10 +244,32 @@ const AddEvent: React.FC = () => {
               return;
             }
 
-            setTitleExists(events.length > 0);
+            const exists = events.length > 0;
+            setTitleExists(exists);
+
+            // Check all form fields are filled and valid
+            const formValues = form.getValues();
+            const isFormComplete =
+              formValues.eventTitle &&
+              formValues.eventSlug &&
+              formValues.eventDate &&
+              formValues.eventTimeHour &&
+              formValues.eventTimeMin &&
+              formValues.eventTimeAMPM &&
+              formValues.eventTimezone;
+
+            const isFormValid = Boolean(
+              Object.keys(form.formState.errors).length === 0 &&
+                form.formState.isDirty &&
+                isFormComplete &&
+                !exists
+            );
+
+            setSubmitButtonEnabled(isFormValid);
             setIsCheckingTitle(false);
           } else {
             setTitleExists(false);
+            setSubmitButtonEnabled(false);
             setIsCheckingTitle(false);
           }
         };
@@ -253,6 +278,29 @@ const AddEvent: React.FC = () => {
         const timeoutId = setTimeout(checkEventTitle, 500);
         return () => clearTimeout(timeoutId);
       }
+
+      // Check form validity when any field changes
+      const formValues = form.getValues();
+      const isFormComplete = Boolean(
+        // Convert to boolean
+        formValues.eventTitle &&
+          formValues.eventSlug &&
+          formValues.eventDate &&
+          formValues.eventTimeHour &&
+          formValues.eventTimeMin &&
+          formValues.eventTimeAMPM &&
+          formValues.eventTimezone
+      );
+
+      const isFormValid = Boolean(
+        // Convert to boolean
+        Object.keys(form.formState.errors).length === 0 &&
+          form.formState.isDirty &&
+          isFormComplete &&
+          !titleExists
+      );
+
+      setSubmitButtonEnabled(isFormValid);
     });
 
     return () => subscription.unsubscribe();
@@ -585,13 +633,9 @@ const AddEvent: React.FC = () => {
             <Button
               type='submit'
               className='w-full'
-              disabled={isCheckingTitle || titleExists}
+              disabled={!submitButtonEnabled || isCheckingTitle}
             >
-              {isCheckingTitle
-                ? 'Checking title...'
-                : titleExists
-                ? 'Title already exists'
-                : 'Create Event'}
+              Create Event
             </Button>
           </form>
         </Form>
