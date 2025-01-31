@@ -8,36 +8,16 @@ import { useCurrentAccount, useCurrentWallet, useDisconnectWallet, useSignTransa
 import { useEnokiFlow, useZkLogin, useZkLoginSession } from "@mysten/enoki/react";
 import clientConfig from "@/config/clientConfig";
 import { useRouter } from "next/navigation";
-import { SponsorTxRequestBody } from "@/types/SponsorTx";
-import { fromB64, toB64 } from "@mysten/sui/utils";
-import axios, { AxiosResponse } from "axios";
 import { useAuthentication } from "./Authentication";
 import { UserRole } from "@/types/Authentication";
 import { jwtDecode } from "jwt-decode";
 
-export interface CreateSponsoredTransactionApiResponse {
-  bytes: string;
-  digest: string;
-}
-
-export interface ExecuteSponsoredTransactionApiInput {
-  digest: string;
-  signature: string;
-}
-
-
-interface SponsorAndExecuteTransactionBlockProps {
-  tx: Transaction;
-  network: "mainnet" | "testnet";
-  options: SuiTransactionBlockResponseOptions;
-  includesTransferTx: boolean;
-  allowedAddresses?: string[];
-}
 
 interface ExecuteTransactionBlockWithoutSponsorshipProps {
   tx: Transaction;
   options: SuiTransactionBlockResponseOptions;
 }
+
 interface CustomWalletContextProps {
   isConnected: boolean;
   isUsingEnoki: boolean;
@@ -45,9 +25,6 @@ interface CustomWalletContextProps {
   jwt?: string;
   emailAddress: string | null;
   getAddressSeed: () => Promise<string>;
-  sponsorAndExecuteTransactionBlock: (
-    props: SponsorAndExecuteTransactionBlockProps
-  ) => Promise<SuiTransactionBlockResponse>;
   executeTransactionBlockWithoutSponsorship: (
     props: ExecuteTransactionBlockWithoutSponsorshipProps
   ) => Promise<SuiTransactionBlockResponse | void>;
@@ -67,9 +44,6 @@ export const CustomWalletContext = createContext<CustomWalletContextProps>({
   jwt: undefined,
   emailAddress: null,
   getAddressSeed: async () => "",
-  sponsorAndExecuteTransactionBlock: async () => {
-    throw new Error("Not implemented");
-  },
   executeTransactionBlockWithoutSponsorship: async () => {},
   logout: () => {},
   redirectToAuthUrl: () => {},
@@ -182,71 +156,6 @@ export default function CustomWalletProvider({children}: {children: React.ReactN
     }).then((resp) => resp.signature);
   };
 
-  const sponsorAndExecuteTransactionBlock = async ({
-    tx,
-    network,
-    options,
-    includesTransferTx,
-    allowedAddresses = [],
-  }: SponsorAndExecuteTransactionBlockProps): Promise<SuiTransactionBlockResponse> => {
-    if (!isConnected) {
-      throw new Error("Wallet is not connected");
-    }
-    try {
-      let digest = "";
-      if (!isUsingEnoki || includesTransferTx) {
-        // Sponsorship will happen in the back-end
-        console.log("Sponsorship in the back-end...");
-        const txBytes = await tx.build({
-          client: suiClient,
-          onlyTransactionKind: true,
-        });
-        console.log('address', address)
-        const sponsorTxBody: SponsorTxRequestBody = {
-          network,
-          txBytes: toB64(txBytes),
-          sender: address!,
-          allowedAddresses,
-        };
-        console.log("Sponsoring transaction block...");
-        const sponsorResponse: AxiosResponse<CreateSponsoredTransactionApiResponse> =
-          await axios.post("/api/sponsor", sponsorTxBody);
-        const { bytes, digest: sponsorDigest } = sponsorResponse.data;
-        console.log("Signing transaction block...");
-        const signature = await signTransaction(fromB64(bytes));
-        console.log("Executing transaction block...");
-        const executeSponsoredTxBody: ExecuteSponsoredTransactionApiInput = {
-          signature,
-          digest: sponsorDigest,
-        };
-        const executeResponse: AxiosResponse<{ digest: string }> =
-          await axios.post("/api/execute", executeSponsoredTxBody);
-        console.log("Executed response: ");
-        digest = executeResponse.data.digest;
-      } else {
-        // Sponsorship can happen in the front-end
-        console.log("Sponsorship in the front-end...");
-        const response = await enokiFlow.sponsorAndExecuteTransaction({
-          network: clientConfig.SUI_NETWORK_NAME,
-          transaction: tx,
-          client: suiClient,
-        });
-        digest = response.digest;
-      }
-      await suiClient.waitForTransaction({ digest, timeout: 5_000 });
-      return suiClient.getTransactionBlock({
-        digest,
-        options,
-      });
-    } catch (err) {
-      console.error(err);
-      throw new Error("Failed to sponsor and execute transaction block");
-    }
-  };
-
-  // some transactions cannot be sponsored by Enoki in its current state
-  // for example when want to use the gas coin as an argument in a move call
-  // so we provide an additional method to execute transactions without sponsorship
   const executeTransactionBlockWithoutSponsorship = async ({
     tx,
     options,
@@ -274,7 +183,6 @@ export default function CustomWalletProvider({children}: {children: React.ReactN
         address,
         jwt: zkLoginSession?.jwt,
         emailAddress,
-        sponsorAndExecuteTransactionBlock,
         executeTransactionBlockWithoutSponsorship,
         logout,
         redirectToAuthUrl,
