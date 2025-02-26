@@ -27,7 +27,6 @@ interface Props {
 
 const PhotoBooth: React.FC<Props> = ({
   selectedEventTitle,
-  selectedEventSlug,
   selectedEventId,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -40,8 +39,11 @@ const PhotoBooth: React.FC<Props> = ({
   const [countdown, setCountdown] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [isUploaded, setIsUploaded] = useState(false);
+  const [currentBlobId, setCurrentBlobId] = useState<string | null>(null);
   const baseUrl = process.env.NEXT_PUBLIC_WEBSITE_BASE_URL || '';
-  const eventUrl = `${baseUrl}/events/${selectedEventSlug}`;
+  const photoURLForQR = currentBlobId
+    ? `${baseUrl}/photos/${currentBlobId}`
+    : '';
 
   useEffect(() => {
     jsConfettiRef.current = new JSConfetti();
@@ -194,6 +196,8 @@ const PhotoBooth: React.FC<Props> = ({
       const result = await response.json();
 
       if (result?.data?.newlyCreated?.blobObject) {
+        setCurrentBlobId(result.data.newlyCreated.blobObject.blobId);
+
         // save to supabase
         const { error } = await supabase.from('photos').insert([
           {
@@ -305,7 +309,7 @@ const PhotoBooth: React.FC<Props> = ({
                     <span className='text-white'>Uploading...</span>
                   </div>
                 )}
-                {isUploaded && (
+                {isUploaded && currentBlobId && (
                   <div className='flex flex-col items-center gap-2'>
                     <div className='flex items-center gap-2'>
                       <Check className='h-5 w-5 text-green-500' />
@@ -313,7 +317,7 @@ const PhotoBooth: React.FC<Props> = ({
                     </div>
                     <div className='bg-white p-3 rounded-lg shadow-lg'>
                       <QRCode
-                        value={eventUrl}
+                        value={photoURLForQR}
                         size={120}
                         style={{
                           height: 'auto',
@@ -325,7 +329,7 @@ const PhotoBooth: React.FC<Props> = ({
                       />
                     </div>
                     <span className='text-zinc-400 text-sm'>
-                      Scan to view event
+                      Scan to view your photo
                     </span>
                   </div>
                 )}
