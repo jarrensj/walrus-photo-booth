@@ -43,6 +43,16 @@ const PhotoBooth: React.FC<Props> = ({
   const baseUrl = process.env.NEXT_PUBLIC_WEBSITE_BASE_URL || '';
   const eventUrl = `${baseUrl}/events/${selectedEventSlug}`;
 
+  const modalTimeoutRef = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    return () => {
+      if (modalTimeoutRef.current) {
+        clearTimeout(modalTimeoutRef.current);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     jsConfettiRef.current = new JSConfetti();
     return () => {
@@ -170,6 +180,18 @@ const PhotoBooth: React.FC<Props> = ({
     }
   };
 
+  const startModalCloseTimer = () => {
+    // Clear any existing timeout
+    if (modalTimeoutRef.current) {
+      clearTimeout(modalTimeoutRef.current);
+    }
+
+    // Set new timeout (30 seconds)
+    modalTimeoutRef.current = setTimeout(() => {
+      setShowModal(false);
+    }, 45000); // 30 seconds
+  };
+
   const uploadPhoto = async () => {
     if (!canvasRef.current) return;
     setIsUploading(true);
@@ -209,6 +231,9 @@ const PhotoBooth: React.FC<Props> = ({
           throw new Error('Failed to save to database');
         }
         setIsUploaded(true);
+
+        // Start the close timer after successful upload
+        startModalCloseTimer();
       } else {
         console.error('Unexpected response structure:', result);
       }
@@ -274,7 +299,16 @@ const PhotoBooth: React.FC<Props> = ({
         </div>
       </div>
 
-      <Dialog open={showModal} onOpenChange={setShowModal}>
+      <Dialog
+        open={showModal}
+        onOpenChange={(open) => {
+          // Clear timeout if modal is manually closed
+          if (!open && modalTimeoutRef.current) {
+            clearTimeout(modalTimeoutRef.current);
+          }
+          setShowModal(open);
+        }}
+      >
         <DialogContent className='max-w-2xl bg-black/90 border-zinc-700 h-[90vh] flex flex-col'>
           <DialogHeader>
             <DialogTitle className='text-center text-2xl font-semibold mb-2 text-white'>
@@ -326,6 +360,9 @@ const PhotoBooth: React.FC<Props> = ({
                     </div>
                     <span className='text-zinc-400 text-sm'>
                       Scan to view event
+                    </span>
+                    <span className='text-zinc-500 text-xs'>
+                      Photo will close automatically in 45 seconds
                     </span>
                   </div>
                 )}
