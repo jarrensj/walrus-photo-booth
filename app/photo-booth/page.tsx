@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import TermsModal from '@/components/TermsModal';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY || '';
@@ -38,6 +39,8 @@ const PhotoBoothPage: React.FC = () => {
   const [currAdminsEvents, setCurrAdminsEvents] = useState<Event[]>([]);
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchCurrentAdmin = async () => {
@@ -116,8 +119,8 @@ const PhotoBoothPage: React.FC = () => {
         <div className='min-h-screen w-full flex flex-col items-center justify-center p-4 gap-4'>
           <h2 className='text-xl font-semibold'>No Events Found</h2>
           <p>You haven&apos;t created any events yet.</p>
-          <a 
-            href="/addEvent" 
+          <a
+            href='/addEvent'
             className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors'
           >
             Create Your First Event
@@ -134,13 +137,25 @@ const PhotoBoothPage: React.FC = () => {
       }`}
     >
       <main className='container mx-auto px-4 py-8 flex flex-col w-full'>
-        <div className='w-full flex items-center justify-center grow p-4'>
+        <div className='w-full flex flex-col items-center justify-center grow p-4'>
           {selectedEvent ? (
-            <PhotoBooth
-              selectedEventTitle={selectedEvent.event_title}
-              selectedEventSlug={selectedEvent.event_slug}
-              selectedEventId={selectedEvent.id}
-            />
+            <>
+              <PhotoBooth
+                selectedEventTitle={selectedEvent.event_title}
+                selectedEventSlug={selectedEvent.event_slug}
+                selectedEventId={selectedEvent.id}
+              />
+              <button
+                onClick={() => setIsTermsModalOpen(true)}
+                className='text-sm text-bkacj hover:text-blue-800 underline mt-4'
+              >
+                Terms & Conditions
+              </button>
+              <TermsModal
+                isOpen={isTermsModalOpen}
+                onClose={() => setIsTermsModalOpen(false)}
+              />
+            </>
           ) : (
             <>
               {currentAdminId && (
