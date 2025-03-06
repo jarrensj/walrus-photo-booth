@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import Link from 'next/link'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY || '';
@@ -129,11 +130,11 @@ const PhotoBoothPage: React.FC = () => {
 
   return (
     <div
-      className={`min-h-screen w-full flex items-center justify-center ${
+      className={`min-h-screen w-full flex flex-col ${
         selectedEvent ? 'bg-[url("/brand-image-walrus.png")] bg-cover' : ''
       }`}
     >
-      <main className='container mx-auto px-4 py-8 flex flex-col w-full'>
+      <main className='container mx-auto px-4 py-8 flex-grow flex flex-col w-full'>
         <div className='w-full flex items-center justify-center grow p-4'>
           {selectedEvent ? (
             <PhotoBooth
@@ -175,6 +176,16 @@ const PhotoBoothPage: React.FC = () => {
           )}
         </div>
       </main>
+      <footer className='w-full py-4 text-center'>
+        <Link 
+          href="/terms-of-use" 
+          className='text-blue-600 hover:underline'
+          target="_blank" 
+          rel="noopener noreferrer"
+        >
+          Terms of Use
+        </Link>
+      </footer>
     </div>
   );
 };

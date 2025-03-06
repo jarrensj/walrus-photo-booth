@@ -50,6 +50,16 @@ const PhotoBooth: React.FC<Props> = ({
     };
   }, []);
 
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (showModal) {
+      timer = setTimeout(() => {
+        setShowModal(false);
+      }, 45000); // 45 seconds
+    }
+    return () => clearTimeout(timer);
+  }, [showModal]);
+
   const startCamera = async () => {
     if (videoRef.current) {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
