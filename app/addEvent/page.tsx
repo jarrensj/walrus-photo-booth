@@ -225,6 +225,7 @@ const AddEvent: React.FC = () => {
         setError(null);
         setErrorMessage(null);
         setTitleExists(false);
+        setIsCheckingTitle(true);
 
         const slug = generateSlug(value.eventTitle || '');
         form.setValue('eventSlug', slug);
