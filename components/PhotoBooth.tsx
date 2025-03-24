@@ -40,6 +40,7 @@ const PhotoBooth: React.FC<Props> = ({
   const [countdown, setCountdown] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [isUploaded, setIsUploaded] = useState(false);
+  const [photoId, setPhotoId] = useState<string | null>(null);
   const baseUrl = process.env.NEXT_PUBLIC_WEBSITE_BASE_URL || '';
   const eventUrl = `${baseUrl}/events/${selectedEventSlug}`;
 
@@ -205,19 +206,24 @@ const PhotoBooth: React.FC<Props> = ({
 
       if (result?.data?.newlyCreated?.blobObject) {
         // save to supabase
-        const { error } = await supabase.from('photos').insert([
+        const { data, error } = await supabase.from('photos').insert([
           {
             blob_id: result.data.newlyCreated.blobObject.blobId,
             object_id: result.data.newlyCreated.blobObject.id,
             created_at: new Date().toISOString(),
             event_id: selectedEventId,
           },
-        ]);
+        ]).select();
 
         if (error) {
           console.error('Error saving to Supabase:', error);
           throw new Error('Failed to save to database');
         }
+        
+        if (data && data.length > 0) {
+          setPhotoId(data[0].blob_id);
+        }
+        
         setIsUploaded(true);
       } else {
         console.error('Unexpected response structure:', result);
@@ -323,7 +329,7 @@ const PhotoBooth: React.FC<Props> = ({
                     </div>
                     <div className='bg-white p-3 rounded-lg shadow-lg'>
                       <QRCode
-                        value={eventUrl}
+                        value={photoId ? `${baseUrl}/photos/${photoId}` : eventUrl}
                         size={120}
                         style={{
                           height: 'auto',
@@ -335,7 +341,7 @@ const PhotoBooth: React.FC<Props> = ({
                       />
                     </div>
                     <span className='text-zinc-400 text-sm'>
-                      Scan to view event
+                      Scan to view your photo
                     </span>
                   </div>
                 )}

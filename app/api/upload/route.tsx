@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     const buffer = Buffer.from(arrayBuffer);
 
     // upload to walrus
-    const response = await fetch(`${PUBLISHER_URL}/v1/blobs?epochs=5`, {
+    const response = await fetch(`${PUBLISHER_URL}/v1/blobs?epochs=183`, {
       method: 'PUT',
       body: buffer,
       headers: {
