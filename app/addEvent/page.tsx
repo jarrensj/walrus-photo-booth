@@ -384,7 +384,9 @@ const AddEvent: React.FC = () => {
     }
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_WEBSITE_BASE_URL || '';
+  const baseUrl = process.env.NEXT_PUBLIC_WEBSITE_BASE_URL || 'localhost:300';
+
+  console.log(baseUrl);
 
   if (isLoading) {
     return <Loading />;

@@ -37,6 +37,8 @@ export const EventCard = ({
   currentAdminId,
   onDelete,
 }: EventCardProps) => {
+  console.log('current admin id: ', currentAdminId);
+
   return (
     <div className='rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-300 ease-in-out hover:-translate-y-2 hover:shadow-xl'>
       <Link href={`/events/${event.event_slug}`} className='block'>

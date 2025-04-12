@@ -42,7 +42,7 @@ const PhotoBooth: React.FC<Props> = ({
   const [showModal, setShowModal] = useState(false);
   const [isUploaded, setIsUploaded] = useState(false);
   const [photoId, setPhotoId] = useState<string | null>(null);
-  const baseUrl = process.env.NEXT_PUBLIC_WEBSITE_BASE_URL || '';
+  const baseUrl = process.env.NEXT_PUBLIC_WEBSITE_BASE_URL || 'localhost:3000';
   const eventUrl = `${baseUrl}/events/${selectedEventSlug}`;
 
   useEffect(() => {
@@ -207,24 +207,27 @@ const PhotoBooth: React.FC<Props> = ({
 
       if (result?.data?.newlyCreated?.blobObject) {
         // save to supabase
-        const { data, error } = await supabase.from('photos').insert([
-          {
-            blob_id: result.data.newlyCreated.blobObject.blobId,
-            object_id: result.data.newlyCreated.blobObject.id,
-            created_at: new Date().toISOString(),
-            event_id: selectedEventId,
-          },
-        ]).select();
+        const { data, error } = await supabase
+          .from('photos')
+          .insert([
+            {
+              blob_id: result.data.newlyCreated.blobObject.blobId,
+              object_id: result.data.newlyCreated.blobObject.id,
+              created_at: new Date().toISOString(),
+              event_id: selectedEventId,
+            },
+          ])
+          .select();
 
         if (error) {
           console.error('Error saving to Supabase:', error);
           throw new Error('Failed to save to database');
         }
-        
+
         if (data && data.length > 0) {
           setPhotoId(data[0].blob_id);
         }
-        
+
         setIsUploaded(true);
       } else {
         console.error('Unexpected response structure:', result);
@@ -237,7 +240,9 @@ const PhotoBooth: React.FC<Props> = ({
     }
   };
 
-  const qrCodeValue = photoId ? `${baseUrl}/events/${selectedEventSlug}?photoId=${photoId}` : eventUrl;
+  const qrCodeValue = photoId
+    ? `${baseUrl}/events/${selectedEventSlug}?photoId=${photoId}`
+    : eventUrl;
 
   return (
     <>
