@@ -11,7 +11,7 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { TrashIcon } from '@radix-ui/react-icons';
+import { TrashIcon, CalendarIcon } from '@radix-ui/react-icons';
 import Image from 'next/image';
 
 interface Event {
@@ -53,7 +53,7 @@ export const EventCard = ({
             {event.event_title.toUpperCase()}
           </h2>
           <p className='text-gray-600 mb-2'>
-            {new Date(event.event_date).toLocaleDateString('en-US', {
+            <CalendarIcon className='inline-block mr-1' /> {new Date(event.event_date).toLocaleDateString('en-US', {
               month: 'long',
               day: 'numeric',
               year: 'numeric',
